@@ -19,6 +19,9 @@ body {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     color: #ffffff;
     transition: background 1s ease;
+    /* Ensure the background extends under the status bar on iOS */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .container {
