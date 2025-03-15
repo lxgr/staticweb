@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Clock</title>
+    <link rel="manifest" href="#manifest">
+    <link rel="apple-touch-icon" href="/api/placeholder/180/180">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
+        }
+        
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ffffff;
+            transition: background 1s ease;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .time {
+            font-size: 3.5rem;
+            font-weight: 300;
+            letter-spacing: 0;
+            font-variant-numeric: tabular-nums;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+        }
+        
+        @media (max-width: 480px) {
+            .time {
+                font-size: 2.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="time">
+            <span id="time">00:00:00</span>
+        </div>
+    </div>
+
+    <script>
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful');
+                }).catch(error => {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+            });
+        }
+
+        // Create a blob URL for the manifest
+        const manifestContent = JSON.stringify({
+            "name": "Clock",
+            "short_name": "Clock",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#1a1a2e",
+            "theme_color": "#000000",
+            "description": "A simple clock app",
+            "icons": [
+                {
+                    "src": "/api/placeholder/192/192",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                },
+                {
+                    "src": "/api/placeholder/512/512",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        });
+        const manifestBlob = new Blob([manifestContent], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        document.querySelector('link[rel="manifest"]').href = manifestURL;
+
+        // Create a blob URL for the service worker
+        const swContent = `
+            self.addEventListener('install', event => {
+                event.waitUntil(
+                    caches.open('clock-v1').then(cache => {
+                        return cache.addAll([
+                            './',
+                            './index.html'
+                        ]);
+                    })
+                );
+            });
+
+            self.addEventListener('fetch', event => {
+                event.respondWith(
+                    caches.match(event.request).then(response => {
+                        return response || fetch(event.request);
+                    })
+                );
+            });
+        `;
+        const swBlob = new Blob([swContent], {type: 'application/javascript'});
+        const swURL = URL.createObjectURL(swBlob);
+
+        // Create a link for the service worker
+        const swLink = document.createElement('a');
+        swLink.href = swURL;
+        swLink.download = 'sw.js';
+        document.body.appendChild(swLink);
+        
+        // Update clock
+        function updateClock() {
+            const now = new Date();
+            
+            // Get time components
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            // Format time in 24-hour format with leading zeros
+            const formattedTime = 
+                hours.toString().padStart(2, '0') + ':' + 
+                minutes.toString().padStart(2, '0') + ':' + 
+                seconds.toString().padStart(2, '0');
+            
+            document.getElementById('time').textContent = formattedTime;
+            
+            // Subtle background animation based on seconds
+            const hue = (seconds / 60) * 30;
+            document.body.style.background = `linear-gradient(135deg, hsl(240, ${20 + seconds}%, 15%) 0%, hsl(220, ${30 + seconds/2}%, 17%) 100%)`;
+        }
+        
+        // Initial update and set interval
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
