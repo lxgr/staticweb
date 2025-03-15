@@ -11,6 +11,14 @@ html, body {
     overflow: hidden;
 }
 
+html {
+    /* Prevent overscroll/bounce effect */
+    overflow: hidden;
+    height: 100%;
+    position: fixed;
+    width: 100%;
+}
+
 body {
     display: flex;
     flex-direction: column;
@@ -22,6 +30,10 @@ body {
     /* Ensure the background extends under the status bar on iOS */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
+    touch-action: manipulation; /* Disable double-tap to zoom */
+    -webkit-user-select: none; /* Disable text selection */
+    user-select: none;
+    height: 100%;
 }
 
 .container {
