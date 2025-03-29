@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MIME Type Detector</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    #dropArea {
+      width: 600px;
+      height: 200px;
+      border: 3px dashed #ccc;
+      border-radius: 10px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    #dropArea.highlight {
+      border-color: #6c6;
+    }
+    #output {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      text-align: left;
+      font-family: monospace;
+      white-space: pre-wrap;
+      background: #f8f8f8;
+    }
+    #pasteCatcher {
+      position: absolute;
+      left: -9999px;
+      width: 0;
+      height: 0;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>MIME Type Detector</h1>
+  <p>Drag, drop, or paste something to detect MIME type:</p>
+
+  <div id="dropArea">Drop files here or click to select</div>
+  <div id="output">Waiting for input...</div>
+  <input id="pasteCatcher" type="text" aria-hidden="true">
+
+  <script>
+    const dropArea = document.getElementById('dropArea');
+    const output = document.getElementById('output');
+    const pasteCatcher = document.getElementById('pasteCatcher');
+
+    function display(text) {
+      output.textContent = text;
+    }
+
+    display("Waiting for input...");
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'));
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'));
+    });
+
+    dropArea.addEventListener('drop', e => {
+      const files = e.dataTransfer.files;
+      showMIMETypes(files);
+    });
+
+    window.addEventListener('paste', e => {
+      const items = e.clipboardData?.items;
+      let result = '';
+      if (items && items.length) {
+        for (let i = 0; i < items.length; i++) {
+          result += `Pasted Item ${i + 1}:\n`;
+          if (items[i].getAsFile) {
+            const file = items[i].getAsFile();
+            if (file) {
+              result += `  Detected as File: ${file.name || '(unnamed)'}\n`;
+              result += `  MIME from file: ${file.type || 'Unknown'}\n`;
+            }
+          }
+          result += `  MIME from item: ${items[i].type || 'Unknown'}\n\n`;
+        }
+      } else {
+        result = 'No MIME types detected.';
+      }
+      display(result);
+    });
+
+    window.addEventListener('click', () => pasteCatcher.focus());
+    window.addEventListener('keydown', () => pasteCatcher.focus());
+
+    dropArea.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.multiple = true;
+      input.onchange = () => {
+        showMIMETypes(input.files);
+      };
+      input.click();
+    });
+
+    function showMIMETypes(files) {
+      let result = '';
+      if (files.length === 0) {
+        result = 'No files detected.';
+      } else {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          result += `File ${i + 1}: ${file.name}\nMIME type: ${file.type || 'Unknown'}\n\n`;
+        }
+      }
+      display(result);
+    }
+  </script>
+</body>
+</html>
