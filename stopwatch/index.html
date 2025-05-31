@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', monospace;
+            font-size: 4rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.3s ease;
+        }
+        
+        .running {
+            background-color: #dc2626;
+        }
+        
+        .paused {
+            background-color: #2563eb;
+        }
+        
+        .time-display {
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .instruction {
+            position: absolute;
+            bottom: 20px;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body class="paused">
+    <div class="time-display" id="timeDisplay">00:00:00</div>
+    <div class="instruction">Click anywhere to start/pause</div>
+
+    <script>
+        let startTime = 0;
+        let elapsedTime = 0;
+        let isRunning = false;
+        let intervalId = null;
+
+        const timeDisplay = document.getElementById('timeDisplay');
+        const body = document.body;
+
+        function formatTime(milliseconds) {
+            const totalSeconds = Math.floor(milliseconds / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            const ms = Math.floor((milliseconds % 1000) / 10);
+            
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${ms.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            const currentTime = isRunning ? Date.now() - startTime + elapsedTime : elapsedTime;
+            timeDisplay.textContent = formatTime(currentTime);
+        }
+
+        function start() {
+            startTime = Date.now();
+            isRunning = true;
+            body.className = 'running';
+            intervalId = setInterval(updateDisplay, 10);
+        }
+
+        function pause() {
+            if (isRunning) {
+                elapsedTime += Date.now() - startTime;
+                isRunning = false;
+                body.className = 'paused';
+                clearInterval(intervalId);
+            }
+        }
+
+        function toggle() {
+            if (isRunning) {
+                pause();
+            } else {
+                start();
+            }
+        }
+
+        // Click anywhere to toggle
+        document.addEventListener('click', toggle);
+
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>
